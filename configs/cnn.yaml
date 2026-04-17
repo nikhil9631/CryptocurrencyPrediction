@@ -1,0 +1,10 @@
+seed: 42
+data:
+  path: data/bitcoin2015to2017_close.h5
+  label_feature: null        # CNN predicts full (steps, features) tensor
+model:
+  name: cnn
+train:
+  epochs: 100
+  batch_size: 8
+  output_name: bitcoin2015to2017_close_CNN_2_relu

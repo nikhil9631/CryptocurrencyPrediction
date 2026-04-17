@@ -1,5 +1,13 @@
 *.csv
 *.h5
 *.hdf5
-weights/*
+*.weights.h5
+weights/
+data/
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+result/*.config.json
 

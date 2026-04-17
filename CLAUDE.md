@@ -3,55 +3,64 @@
 ## Project
 
 Cryptocurrency price prediction using deep learning models (CNN, GRU, LSTM).
-Built with Python, TensorFlow (v1), and Keras.
+Python 3 / TensorFlow 2 (`tf.keras`). Config-driven, seeded, tested.
 
-## Key Files
+## Architecture
 
-- `CNN.py` — CNN-based prediction model
-- `GRU.py` — GRU-based prediction model
-- `LSTM.py` — LSTM-based prediction model
-- `DataProcessor.py` — prepares dataset (windowing)
-- `PastSampler.py` — generates past/future samples
-- `Prediction.py` — runs predictions and plotting
-- `PlotRegularization.py` — regularization experiments
+- `crypto_prediction/` — core package
+  - `config.py` — `Config` dataclass, YAML loader, `key=value` CLI overrides
+  - `seed.py` — `seed_everything()` (python/numpy/TF + deterministic ops)
+  - `data.py` — `build_dataset` / `save_dataset` / `load_dataset` / `split`
+  - `models.py` — `MODEL_BUILDERS` registry: cnn, gru, lstm, gru_wf
+  - `train.py` — `run(cfg)` generic training loop
+  - `inference.py` — `predict(cfg, weights)` → (times, truth, pred)
+- `configs/*.yaml` — declarative experiment configs
+- `tests/` — pytest suite (config, data, models, seed, train+infer)
+- Top-level `CNN.py` / `GRU.py` / `LSTM.py` / `DataProcessor.py` /
+  `Prediction.py` are 5-line wrappers over the package — keep them thin.
 
 ## Conventions
 
-- Use Python scripts for training models (not notebooks)
-- Keep dataset paths consistent (`data/*.h5`)
-- Use numpy arrays with shape: (samples, time_steps, features)
-- Always split dataset into train/validation
-- Normalize data before training
+- All behaviour flows through `Config`. Add new knobs there, not ad-hoc argparse.
+- Override on CLI with dotted keys: `train.epochs=5 seed=7 model.units=64`
+- New model → add factory to `crypto_prediction/models.py` and register in
+  `MODEL_BUILDERS`; add a `configs/<name>.yaml`; add a shape test.
+- Array shape: `(samples, time_steps, features)`
+- Import Keras via `tensorflow.keras`, never standalone `keras`
+- Call `seed_everything(cfg.seed)` before any model/data construction
 
 ## Do Not
 
-- Do not hardcode GPU IDs (`CUDA_VISIBLE_DEVICES`)
-- Do not change dataset structure without updating all models
-- Do not mix notebook code inside `.py` files
+- Do not add per-script argparse — extend `Config` instead
+- Do not hardcode `CUDA_VISIBLE_DEVICES` — set it in the shell if needed
+- Do not use TF1 APIs (`tf.Session`, `tf.ConfigProto`, `set_session`)
 - Do not commit large datasets or weights
 
 ## Workflow
 
-- Train model using: `python CNN.py` or `GRU.py` or `LSTM.py`
-- Evaluate using `Prediction.py`
-- Use `Plot*.ipynb` for visualization only
+- Build dataset: `python DataProcessor.py [data.synthetic=true]`
+- Train: `python CNN.py [--config configs/cnn.yaml] [key=value ...]`
+- Evaluate: `python Prediction.py --config <cfg> --weights weights/<ckpt>.weights.h5`
+- Test: `pytest -q`
 
 ## Testing
 
-- No automated tests available
-- Validate models using loss and prediction plots
-- Compare with baseline models (Linear Regression / Random Walk)
+- `pytest -q` — 21 tests, ~15s on CPU
+- Covers: config load/override/reject-unknown, PastSampler shapes, dataset
+  build seeding + HDF5 round-trip, model forward shapes, weight-init
+  determinism, 1-epoch train reproducibility, train→inference round-trip
+- New code should add or update tests in `tests/`
 
 ## Environment
 
-- Python 2.7 (legacy)
-- TensorFlow 1.x
-- Keras 2.1
-- h5py for dataset handling
+- Python 3.9+
+- `pip install -r requirements.txt` (tensorflow, numpy, pandas, h5py,
+  scikit-learn, matplotlib, pyyaml, pytest)
 
 ## Gotchas
 
-- Dataset files (`.h5`) are not included — must be generated first
-- `.ipynb_checkpoints` are not part of actual code
-- Some scripts assume specific dataset shapes
-- Old TensorFlow version may not work on modern systems
+- `.h5` datasets and `weights/` are gitignored — generate them first
+- `data.synthetic=true` gives a runnable smoke-test dataset
+- CNN architecture requires `input_steps >= 256` (fixed kernel/stride)
+- Checkpoint extension is `.weights.h5` (Keras 3 requirement)
+- Every training run dumps `result/<name>.config.json` for provenance

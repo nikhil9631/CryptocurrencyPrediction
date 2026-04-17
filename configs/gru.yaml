@@ -1,0 +1,13 @@
+seed: 42
+data:
+  path: data/bitcoin2015to2017_close.h5
+  label_feature: 0           # predict close column only
+model:
+  name: gru
+  units: 50
+  output_size: 16
+  dropout: 0.2
+train:
+  epochs: 100
+  batch_size: 8
+  output_name: bitcoin2015to2017_close_GRU_1_tanh_relu
