@@ -1,70 +1,22 @@
+"""Build the windowed .h5 dataset. Thin entry point — see crypto_prediction.data.
 
-# coding: utf-8
+Usage::
 
-# In[2]:
-
-
-import pandas as pd
-import numpy as np
-import h5py
-
-
-# In[24]:
+    python DataProcessor.py --config configs/default.yaml data.synthetic=true data.tail=30000
+"""
+from crypto_prediction.config import parse_cli
+from crypto_prediction.data import build_dataset, save_dataset
 
 
-input_step_size = 50
-output_size = 30
-sliding_window = False
-file_name= 'bitcoin2012_2017_50_30_prediction.h5' 
+def main():
+    cfg = parse_cli(default_config='configs/default.yaml',
+                    description='Build windowed .h5 dataset')
+    ds = build_dataset(cfg.data, seed=cfg.seed)
+    print(f'inputs={ds.inputs.shape} outputs={ds.outputs.shape}')
+    save_dataset(ds, cfg.data.path)
+    print(f'Wrote {cfg.data.path}')
 
 
-# In[19]:
-
-
-df = pd.read_csv('data/bitstampUSD_1-min_data_2012-01-01_to_2017-05-31.csv').dropna().tail(1000000)
-df['Datetime'] = pd.to_datetime(df['Timestamp'],unit='s')
-df.head()
-
-
-# In[30]:
-
-
-prices= df.loc[:,'Close'].values
-times = df.loc[:,'Close'].values
-prices.shape
-
-
-# In[31]:
-
-
-outputs = []
-inputs = []
-output_times = []
-input_times = []
-if sliding_window:
-    for i in range(len(prices)-input_step_size-output_size):
-        inputs.append(prices[i:i + input_step_size])
-        input_times.append(times[i:i + input_step_size])
-        outputs.append(prices[i + input_step_size: i + input_step_size+ output_size])
-        output_times.append(times[i + input_step_size: i + input_step_size+ output_size])
-else:
-    for i in range(0,len(prices)-input_step_size-output_size, input_step_size):
-        inputs.append(prices[i:i + input_step_size])
-        input_times.append(times[i:i + input_step_size])
-        outputs.append(prices[i + input_step_size: i + input_step_size+ output_size])
-        output_times.append(times[i + input_step_size: i + input_step_size+ output_size])
-inputs= np.array(inputs)
-outputs= np.array(outputs)
-output_times = np.array(output_times)
-input_times = np.array(input_times)
-
-
-# In[34]:
-
-
-with h5py.File(file_name, 'w') as f:
-    f.create_dataset("inputs", data = inputs)
-    f.create_dataset('outputs', data = outputs)
-    f.create_dataset("input_times", data = input_times)
-    f.create_dataset('output_times', data = output_times)
+if __name__ == '__main__':
+    main()
 

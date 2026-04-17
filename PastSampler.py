@@ -1,12 +1,6 @@
-
-# coding: utf-8
-
-# In[5]:
-
-
 import numpy as np
-import pandas as pd
- 
+
+
 class PastSampler:
     '''
     Forms training samples for predicting future values from past value

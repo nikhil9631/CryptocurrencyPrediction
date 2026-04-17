@@ -1,0 +1,19 @@
+seed: 42
+deterministic: true
+
+data:
+  path: data/bitcoin2015to2017_close.h5
+  csv: data/bitstampUSD_1-min_data_2012-01-01_to_2017-05-31.csv
+  input_steps: 256
+  output_steps: 16
+  tail: 1000000
+  sliding: false
+  synthetic: false
+  train_ratio: 0.8
+
+train:
+  batch_size: 8
+  weights_dir: weights
+  result_dir: result
+  save_best_only: false
+  early_stopping_patience: 0

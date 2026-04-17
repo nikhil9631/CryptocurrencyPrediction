@@ -1,0 +1,8 @@
+tensorflow>=2.12
+numpy>=1.23
+pandas>=1.5
+h5py>=3.8
+scikit-learn>=1.2
+matplotlib>=3.7
+pyyaml>=6.0
+pytest>=7.0
